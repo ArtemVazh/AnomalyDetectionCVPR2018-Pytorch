@@ -151,6 +151,7 @@ if __name__ == "__main__":
     else:
         print("Use 1st video segment to calculate the anomaly score")
 
+    k = 0
     with torch.no_grad():
         for features, start_end_couples, lengths in tqdm(data_iter):
             # features is a batch where each item is a tensor of 32 4096D features
@@ -191,6 +192,15 @@ if __name__ == "__main__":
                 else:
                     y_trues = np.concatenate([y_trues, y_true])
                     y_preds = np.concatenate([y_preds, y_pred])
+                    
+            #path = 'exps/grid_search/triplet_adadelta_0.1_8e-05_5_5_0.2/42/models/vectors'
+            #with open(f'{path}/{k}_embed.npy', 'wb') as f:
+            #    np.save(f, outputs.detach().cpu().numpy()[0, :, :])
+            #with open(f'{path}/{k}_true.npy', 'wb') as f:
+            #    np.save(f, y_true)
+            #with open(f'{path}/{k}_pred.npy', 'wb') as f:
+            #    np.save(f, y_pred)
+            k+=1
 
     fpr, tpr, thresholds = roc_curve(y_true=y_trues, y_score=y_preds, pos_label=1)
 
@@ -208,7 +218,7 @@ if __name__ == "__main__":
     plt.legend(loc="lower right")
 
     os.makedirs("graphs", exist_ok=True)
-    plt.savefig(path.join("graphs", args.filename))
+    plt.savefig(f"graphs/{args.filename}")
     print("ROC curve (area = %0.3f)" % roc_auc)
     if args.save_to_pt_folder:
         save_folder_path = f"{os.sep}".join(args.model_path.split(os.sep)[:-1])

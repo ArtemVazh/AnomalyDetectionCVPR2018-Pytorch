@@ -2,13 +2,13 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from pytorch_metric_learning.miners import MultiSimilarityMiner
-from pytorch_metric_learning.losses import TripletMarginLoss
+from pytorch_metric_learning.losses import TripletMarginLoss, CircleLoss
 
 custom_namespace = {
     "MultiSimilarityMiner": MultiSimilarityMiner,
     "TripletMarginLoss": TripletMarginLoss,
+    "CircleLoss": CircleLoss,
 }
-
 
 class PytorchMetricLearningObjectiveWithSampling(nn.Module):
     def __init__(
