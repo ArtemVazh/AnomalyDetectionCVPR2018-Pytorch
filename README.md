@@ -40,6 +40,7 @@ Arguments:
 * model_type - which type of model to use for feature extraction (necessary in order to choose the correct pre-processing)
 * pretrained_3d - path to the 3D model to use for feature extraction
 ```python feature_extractor.py --dataset_path "path-to-dataset" --model_type "fe-model-eg-c3d" --pretrained_3d "path-to-pretrained-fe"```
+* to extract features with stochastic augmentations use `feature_extractor_augs.py` script
 
 ## Training
 Arguments:
@@ -53,12 +54,15 @@ Arguments:
   2) ```--objective_name PytorchMetricLearningObjectiveWithSampling```
   3) ```--loss_name [TripletMarginLoss, CircleLoss, ArcFaceLoss]```
   4) ```--miner_name [MultiSimilarityMiner, TripletMarginMiner, BatchHardMiner]```
+* to train with SimCLR approach use `TrainingAnomalyDetector_SimCLR.py` script you have to add 4 flags (features1 and features2 - paths to precomputed augmentation of the dataset):
+```--network_name TripletAnomalyDetector --objective_name SimCLRLoss --features_path_1 features1 --features_path features2```
 * Model parameters available:
     1) ```--no_use_last_bn or --use_last_bn ``` if we want BN after the last layer
     2) ```--no_norm_out_to_unit or --norm_out_to_unit``` if we want to normalize the embedding to unit norm
 * Optimizer parameters:
     1) ```--optimizer [adam, adadelta]```
     2) ```--lr_base 0.001```
+    
 ## Generate ROC Curve
 Arguments:
 * features_path - path to the directory containing the extracted features (pre-computed features are available for download above, or supply your own features extracted from the previous stage)

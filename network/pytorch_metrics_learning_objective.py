@@ -13,7 +13,6 @@ custom_namespace = {
     'ArcFaceLoss': ArcFaceLoss
 }
 
-
 class PytorchMetricLearningObjectiveWithSampling(nn.Module):
     def __init__(
             self,

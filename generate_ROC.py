@@ -208,6 +208,7 @@ if __name__ == "__main__":
                 else:
                     y_trues = np.concatenate([y_trues, y_true])
                     y_preds = np.concatenate([y_preds, y_pred])
+                    
 
     fpr, tpr, thresholds = roc_curve(y_true=y_trues, y_score=y_preds, pos_label=1)
 
@@ -225,7 +226,7 @@ if __name__ == "__main__":
     plt.legend(loc="lower right")
 
     os.makedirs("graphs", exist_ok=True)
-    plt.savefig(path.join("graphs", args.filename))
+    plt.savefig(f"graphs/{args.filename}")
     print("ROC curve (area = %0.3f)" % roc_auc)
 
     if args.save_to_pt_folder:

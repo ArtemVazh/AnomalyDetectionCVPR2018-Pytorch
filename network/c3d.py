@@ -35,6 +35,8 @@ class C3D(nn.Module):
         )
 
         self.fc6 = nn.Linear(8192, 4096)
+        self.fc7 = nn.Linear(4096, 4096)
+        
         self.relu = nn.ReLU()
         self.__init_weight()
 
@@ -56,7 +58,9 @@ class C3D(nn.Module):
         x = self.relu(self.conv5b(x))
         x = self.pool5(x)
         x = x.view(-1, 8192)
-        x = self.relu(self.fc6(x))
+        x = self.fc6(x)
+        #x = self.relu(self.fc6(x))
+        #x = self.fc7(x)
 
         return x
 
@@ -90,11 +94,14 @@ class C3D(nn.Module):
             # fc6
             "fc6.weight",
             "fc6.bias",
+            # fc7
+            "fc7.weight",
+            "fc7.bias",
         ]
 
         ignored_weights = [
             f"{layer}.{type_}"
-            for layer, type_ in itertools.product(["fc7", "fc8"], ["bias", "weight"])
+            for layer, type_ in itertools.product(["fc8"], ["bias", "weight"])
         ]
 
         p_dict = torch.load(self.pretrained)

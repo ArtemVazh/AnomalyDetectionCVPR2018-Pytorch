@@ -32,7 +32,7 @@ def register_logger(log_file=None, stdout=True):
     logging.root.setLevel(logging.INFO)
 
 
-def build_transforms(mode="c3d"):
+def build_transforms(mode="c3d", rand_aug=False):
     if mode == "c3d":
         mean = [124 / 255, 117 / 255, 104 / 255]
         std = [1 / (0.0167 * 255)] * 3
@@ -49,13 +49,28 @@ def build_transforms(mode="c3d"):
     else:
         raise NotImplementedError(f"Mode {mode} not implemented")
 
-    res = transforms.Compose(
-        [
-            transforms_video.ToTensorVideo(),
-            transforms_video.ResizeVideo(resize),
-            transforms_video.CenterCropVideo(crop),
-            transforms_video.NormalizeVideo(mean=mean, std=std),
-        ]
-    )
+    if rand_aug:
+        res = transforms.Compose(
+            [
+                transforms_video.ToTensorVideo(),
+                transforms_video.ResizeVideo(resize),
+                transforms_video.CenterCropVideo(crop),
+
+                transforms_video.RandomHorizontalFlipVideo(),
+                transforms_video.RandomResizedCropVideo((200, 200), 100),
+                transforms_video.RandomRotationVideo(20),
+
+                transforms_video.NormalizeVideo(mean=mean, std=std),
+            ]
+        )
+    else:
+        res = transforms.Compose(
+            [
+                transforms_video.ToTensorVideo(),
+                transforms_video.ResizeVideo(resize),
+                transforms_video.CenterCropVideo(crop),
+                transforms_video.NormalizeVideo(mean=mean, std=std),
+            ]
+        )
 
     return res

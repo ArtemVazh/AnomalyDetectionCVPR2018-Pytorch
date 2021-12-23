@@ -11,7 +11,7 @@ import torch
 import torch.backends.cudnn as cudnn
 from torch.utils.tensorboard import SummaryWriter
 
-from features_loader import FeaturesLoader
+from features_loader import FeaturesLoader, FeaturesLoaderAugs
 from network.TorchUtils import TorchModel
 from network.anomaly_detector_model import (
     AnomalyDetector,
@@ -22,6 +22,8 @@ from network.anomaly_detector_model import (
 from network.pytorch_metrics_learning_objective import (
     PytorchMetricLearningObjectiveWithSampling,
 )
+
+from network.SimCLR import info_nce_loss
 from network.triplet_anomaly_detector_model import TripletAnomalyDetector
 from network.triplet_loss import triplet_objective, triplet_objective_sampling
 from utils.callbacks import DefaultModelCallback, TensorBoardCallback
@@ -34,6 +36,7 @@ custom_namespace = {
     "triplet_objective": triplet_objective,
     "triplet_objective_sampling": triplet_objective_sampling,
     "PytorchMetricLearningObjectiveWithSampling": PytorchMetricLearningObjectiveWithSampling,
+    "SimCLRLoss": info_nce_loss
 }
 
 
@@ -50,7 +53,8 @@ def get_args():
     parser = argparse.ArgumentParser(description="PyTorch Video Classification Parser")
 
     # io
-    parser.add_argument("--features_path", default="features", help="path to features")
+    parser.add_argument("--features_path_1", default="features", help="path to features of 1st augmentation")
+    parser.add_argument("--features_path_2", default="features", help="path to features of 2nd augmentation")
     parser.add_argument(
         "--annotation_path",
         default="Train_Annotation.txt",
@@ -147,21 +151,6 @@ def get_args():
         default=8e-5,
         help="lambdas value for smoothness part in triplet loss",
     )
-    parser.add_argument(
-        "--top_anomaly_frames",
-        type=int,
-        default=3,
-        help="top anomalaly frames (segments) per video",
-    )
-    parser.add_argument(
-        "--top_normal_frames",
-        type=int,
-        default=3,
-        help="top normal frames (segments) per video",
-    )
-    parser.add_argument(
-        "--margin", type=float, default=0.2, help="margin constant in triplet loss"
-    )
     parser.add_argument("--seed", type=int, default=42, help="random seed")
 
     parser.add_argument(
@@ -209,8 +198,9 @@ if __name__ == "__main__":
     set_seed(args.seed)
 
     # Data loader
-    train_loader = FeaturesLoader(
-        features_path=args.features_path,
+    train_loader = FeaturesLoaderAugs(
+        features_path1=args.features_path_1,
+        features_path2=args.features_path_2,
         annotation_path=args.annotation_path,
         iterations=args.iterations_per_epoch,
     )
@@ -240,7 +230,10 @@ if __name__ == "__main__":
         lr = 0.01
         epsilon = 1e-8
     """
-
+    if args.optimizer == "adadelta":
+        optimizer = torch.optim.Adadelta(model.parameters(), lr=args.lr_base, eps=1e-8)
+    elif args.optimizer == "adam":
+        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr_base)
 
     if inspect.isfunction(custom_namespace[args.objective_name]):
         objective = custom_namespace[args.objective_name]
@@ -267,16 +260,6 @@ if __name__ == "__main__":
         ).to(device)
     else:
         criterion = RegularizedLoss(network, objective).to(device)
-
-    if args.loss_name == 'ArcFace':
-        opt_params = list(model.parameters()) + list(objective.loss_func.parameters())
-    else:
-        opt_params = model.parameters()
-
-    if args.optimizer == "adadelta":
-        optimizer = torch.optim.Adadelta(opt_params, lr=args.lr_base, eps=1e-8)
-    elif args.optimizer == "adam":
-        optimizer = torch.optim.Adam(opt_params, lr=args.lr_base)
 
     # Callbacks
     tb_writer = SummaryWriter(log_dir=tb_dir)

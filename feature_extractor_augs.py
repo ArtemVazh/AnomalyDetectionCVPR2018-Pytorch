@@ -48,7 +48,7 @@ def get_args():
     parser.add_argument(
         "--save_dir",
         type=str,
-        default="features",
+        default="features_augs",
         help="set output directory for the features.",
     )
 
@@ -172,7 +172,7 @@ def get_features_loader(
         dataset_path=dataset_path,
         clip_length=clip_length,
         frame_stride=frame_interval,
-        video_transform=build_transforms(mode, rand_aug=False),
+        video_transform=build_transforms(mode, rand_aug=True),
         return_label=False,
     )
 
